@@ -211,7 +211,7 @@ Phases *calculatePhases(const Coordinates *coord, const Frequencies *freq, const
                 
                 //phs->outPhases[iChan][iBeam][iAnt] = (separate the imaginary and reals ???)
                 //phs->EWPhases[iChan][iBeam][iAnt]=???
-                //phs->EWPhases[iChan][iBeam][iAnt]=????
+                //phs->NSPhases[iChan][iBeam][iAnt]=????
             }
         }
     }
