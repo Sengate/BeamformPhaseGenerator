@@ -138,7 +138,7 @@ Phases * phases_contruct_zeros(const unsigned int nChan, const unsigned int nBea
         phs->outPhases[iChan] = (float**)malloc(sizeof(float*) * phs->nBeam);
         for (iBeam=0; iBeam < phs->nBeam; iBeam++)
             
-            phs->outPhases[iChan][iBeam] = (float*)malloc(sizeof(float)*phs->nAnt);
+        phs->outPhases[iChan][iBeam] = (float*)malloc(sizeof(float)*phs->nAnt);
         phs->EWPhases[iChan][iBeam] = (float*)malloc(sizeof(float)*phs->nAnt);
         phs->NSPhases[iChan][iBeam] = (float*)malloc(sizeof(float)*phs->nAnt);
         
@@ -200,6 +200,8 @@ Phases *calculatePhases(const Coordinates *coord, const Frequencies *freq, const
         float omega[iChan] = M_2PI * freq->frequencies[iChan];
         
         for (iBeam=0; iBeam < coord->nBeams; iBeam++ ){
+            
+            //complute_alt_az(coord->RAs[iBeam], coord->Decs[iBeam], lst);
             
             for (iAnt=0; iAnt < ants->nant; iAnt++){
                 
