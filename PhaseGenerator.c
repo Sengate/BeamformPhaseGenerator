@@ -3,8 +3,6 @@
 #include <math.h>
 #include <string.h>
 
-
-
 #include "Coordinates.h"
 //#include "Phases_Inputs.h"
 //#include "generate_phases.h"
@@ -55,17 +53,14 @@ Inputs *inputs_zeros(unsigned int nBeams, unsigned int nAnts, unsigned int nChan
     //Allocate Antennas Positions
     inp->EW_antennas = (float*) malloc (sizeof(float) * nAnts);
     memset(inp->EW_antennas, 0x00, sizeof(float) * nAnts);
-    
     inp->NS_antennas = (float*) malloc (sizeof(float) * nAnts);
     memset(inp->NS_antennas, 0x00, sizeof(float) * nAnts);
-    
     inp->H_antennas = (float*) malloc (sizeof(float) * nAnts);
     memset(inp->H_antennas, 0x00, sizeof(float) * nAnts);
     
     //Allocate Beams coordinates
     inp->RAs = (float*) malloc (sizeof(float) * nBeams);
     memset(inp->RAs, 0x00, sizeof(float) * nBeams);
-    
     inp->DECs = (float*) malloc (sizeof(float) * nBeams);
     memset(inp->DECs, 0x00, sizeof(float) * nBeams);
     
@@ -88,14 +83,9 @@ void inputs_destroy( Inputs *inp){
 /*------------------------------------------------------------------------------------------------------*/
 
 typedef struct complex_phases{
-    
-    unsigned int nChan;
-    unsigned int nBeam;
-    unsigned int nAnt;
-    
+    unsigned int nChan, nBeam, nAnt;
     float *real;
     float *imag;
-    
 }complex_phases;
 
 //make zeros of complex phases
@@ -103,18 +93,15 @@ complex_phases * cPhases_make_zeros(const unsigned int nChan, const unsigned int
                                     const unsigned int nAnt)
 {
     complex_phases *phases;
-    
-    phases =(complex_phases *) malloc (sizeof(complex_phases));
-    
+    phases =(complex_phases *) malloc(sizeof(complex_phases));
+
     phases->nChan = nChan;
     phases->nBeam = nBeam;
     phases->nAnt = nAnt;
     
     unsigned int dimesion = phases->nChan * phases->nBeam * phases->nAnt;
-    
-    phases->real = (float *)malloc(sizeof(float) * dimesion);
-    phases->imag = (float *)malloc(sizeof(float) * dimesion);
-    
+    phases->real = (float *) malloc(sizeof(float) * dimesion);
+    phases->imag = (float *) malloc(sizeof(float) * dimesion);
     memset(phases->real, 0x00, sizeof(float) * dimesion);
     memset(phases->imag, 0x00, sizeof(float) * dimesion);
     
@@ -124,7 +111,6 @@ complex_phases * cPhases_make_zeros(const unsigned int nChan, const unsigned int
 
 //Destroy complex phases
 void complexPhase_destroy(complex_phases *phases) {
-    
     free((void *) phases->real);
     free((void *) phases->imag);
     free((void *) phases);
@@ -138,7 +124,6 @@ void complexPhase_destroy(complex_phases *phases) {
 Inputs *read_files(const char *ants_positions, const char *BeamsCords)
 {
     Inputs *inputs;
-    
     inputs->nants = NANTS;
     inputs->nbeams = NBEAMS;
     inputs->nfreq = NFREQ;
@@ -147,7 +132,6 @@ Inputs *read_files(const char *ants_positions, const char *BeamsCords)
     inputs  = inputs_zeros(NBEAMS, NANTS, NFREQ);
     
     FILE *ants_file; //= fopen(ants_positions,"r");
-    
     if ((ants_file = fopen(ants_positions, "r")) == NULL)
     {
         printf("Error : Unable to open Array positions file\n");
@@ -206,7 +190,7 @@ Inputs *read_files(const char *ants_positions, const char *BeamsCords)
         printf("%f",inputs->frequencies[i] );
     }
     
-    //memory delocation
+    //memory dellocation
     inputs_destroy(inputs);
     
     return inputs;
@@ -234,9 +218,8 @@ complex_phases *calculate_complex_phases(Inputs *inputs, struct timespec time_no
                 
                 //convert ra/dec to az/alt
                 RaDec_to_AltAz(inputs->RAs[ibeam], inputs->DECs[ibeam], LATITUDE, LST, &az, &alt);
-                
+            
                 float angx = omega * inputs->EW_antennas[iant] * sin(alt) * cos(az)/C_SPEED;
-                
                 float angy = omega * inputs->NS_antennas[iant] * sin(alt) * cos(az)/C_SPEED;
                 
                 com_phases->real[ichan * com_phases->nBeam * com_phases->nAnt
