@@ -16,14 +16,12 @@
 #define NANTS 256
 #define C_SPEED 30000000.0
 
-
 /*---------------------------------------------------------------------------------------*/
 // Strut holding relevant observation information
 //used to read file
 /*---------------------------------------------------------------------------------------*/
 
 typedef struct Inputs{
-    
     //get frequencies
     float *frequencies;
     unsigned int nfreq;
@@ -38,7 +36,6 @@ typedef struct Inputs{
     float *RAs;
     float *DECs;
     unsigned int nbeams;
-    
 } Inputs;
 
 
@@ -51,12 +48,9 @@ Inputs *inputs_zeros(unsigned int nBeams, unsigned int nAnts, unsigned int nChan
     inp->nants = nAnts;
     inp->nbeams = nBeams;
     
-    
-    
     //Allocate frequencies
     inp->frequencies = (float*) malloc (sizeof(float) * nChan);
     memset(inp->frequencies, 0x00, sizeof(float) * nChan);
-    
     
     //Allocate Antennas Positions
     inp->EW_antennas = (float*) malloc (sizeof(float) * nAnts);
@@ -76,10 +70,7 @@ Inputs *inputs_zeros(unsigned int nBeams, unsigned int nAnts, unsigned int nChan
     memset(inp->DECs, 0x00, sizeof(float) * nBeams);
     
     return inp;
-    
 }
-
-
 
 //Destroy Inputs memory allocation
 void inputs_destroy( Inputs *inp){
@@ -90,15 +81,11 @@ void inputs_destroy( Inputs *inp){
     free((void *) inp->NS_antennas);
     free((void *) inp->H_antennas);
     
-    
 }
-/*---------------------------------------------------------------------------------------*/
-
 
 /*------------------------------------------------------------------------------------------------------*/
  //                   COMPLEX PHASE STRUCT AND MEMORY ALLOCATION
 /*------------------------------------------------------------------------------------------------------*/
-
 
 typedef struct complex_phases{
     
@@ -110,9 +97,6 @@ typedef struct complex_phases{
     float *imag;
     
 }complex_phases;
-
-
-
 
 //make zeros of complex phases
 complex_phases * cPhases_make_zeros(const unsigned int nChan, const unsigned int nBeam,
@@ -138,8 +122,6 @@ complex_phases * cPhases_make_zeros(const unsigned int nChan, const unsigned int
     
 }
 
-
-
 //Destroy complex phases
 void complexPhase_destroy(complex_phases *phases) {
     
@@ -147,6 +129,7 @@ void complexPhase_destroy(complex_phases *phases) {
     free((void *) phases->imag);
     free((void *) phases);
 }
+
 
 /*------------------------------------------------------------------------------------------------------*/
 /*                READ FILES FUNCTION
@@ -187,7 +170,6 @@ Inputs *read_files(const char *ants_positions, const char *BeamsCords)
         
     }
     
-    
     /* -----------------Read beams Positions----------------------*/
     
     inputs->nbeams = NBEAMS;
@@ -212,7 +194,6 @@ Inputs *read_files(const char *ants_positions, const char *BeamsCords)
         }
     }
     
-    
     /*---------------------Get Frequencies-----------------------------*/
     inputs->nfreq = NFREQ;
     float MAX_FREQ = 810.0;
@@ -229,23 +210,14 @@ Inputs *read_files(const char *ants_positions, const char *BeamsCords)
     inputs_destroy(inputs);
     
     return inputs;
-    
-    
 }
-
-
-
 
 /*------------------------------------------------------------------------------------------*/
 //                              CALCULATE PHASES
 /*------------------------------------------------------------------------------------------*/
 complex_phases *calculate_complex_phases(Inputs *inputs, struct timespec time_now, float LATITUDE, float LONGITUDE)
 {
-    
-    //calculate complex phases
-    
     complex_phases *com_phases;
-    
     
     int ichan, ibeam, iant;
     float az, alt;
@@ -256,13 +228,8 @@ complex_phases *calculate_complex_phases(Inputs *inputs, struct timespec time_no
     com_phases = cPhases_make_zeros(NFREQ, NBEAMS, NANTS);
     
     for (ichan=0; ichan < com_phases->nChan; ichan++){
-        
-        
         for (ibeam=0; ibeam < com_phases->nBeam; ibeam++){
-            
-            
             for (iant =0; iant < com_phases->nAnt; iant++){
-                
                 float omega = M_2PI * inputs->frequencies[ichan];
                 
                 //convert ra/dec to az/alt
@@ -278,11 +245,9 @@ complex_phases *calculate_complex_phases(Inputs *inputs, struct timespec time_no
                 com_phases->imag[ichan * com_phases->nBeam * com_phases->nAnt
                                  + ibeam * com_phases->nAnt + iant] = -sin(angx + angy);
                 
-                
             }
         }
     }
-    
     complexPhase_destroy(com_phases);
     
     return com_phases;
@@ -296,9 +261,6 @@ complex_phases *calculate_complex_phases(Inputs *inputs, struct timespec time_no
 
 int main(){
     
-    
-    
-
     
     return 0;
 }
