@@ -167,7 +167,7 @@ Inputs *read_files(const char *ants_positions, const char *BeamsCords)
         exit(EXIT_FAILURE);
     }
     int count2 =0;
-    while ( ( fscanf(beamsCoords, "%d %d", &ra, &dec) ) == 2)
+    while ( ( fscanf(beamsCoords, "%f %f", &ra, &dec) ) == 2)
     {
         inputs->RAs[count2] = ra;
         inputs->DECs[count2] = dec;
