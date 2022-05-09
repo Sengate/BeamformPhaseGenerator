@@ -8,64 +8,31 @@
 #include <string.h>
 #include <time.h>
 
+//PI
+#define SEC2HR 1/3600.0;
+#define Deg2HR 1/15.0;
+
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
-#ifndef M_2PI
-#define M_2PI 6.283185307179586476925286766559005
-#endif
 
-#define D2R (M_PI*2.0/360.0)
-#define R2D (360.0/(M_PI*2.0))
+#define Deg2Rad M_PI/180.0
+#define Rad2Deg 180./M_PI
 
 
-
-void RaDec_to_AltAz(float ra , float dec,float lst, float telescope_lat, float *az, float *alt){
-    
-     //Convert equatorial coordinates (right ascension - decliantio)
-     //to Harizontal coordinates (azimuth-altitude)
-     /**
-     ** Inputs:
-     **         ra                  right accesion       [degrees]
-     **         dec                 declination          [degrees]
-     **         lst                 local sidereal time  [seconds]
-     **         telescope_lat       Telescope latitude   [degrees]
-     **
-     ** Return:
-     **         *az                 Azimuths             [degrees]
-     **         *alt                Altitudes            [degrees]
-     **/
-    
-    float ha = lst - ra;
-    if (ha > 12.0)
-        ha = ha - 24.0;
-    else if (ha < -12.0)
-        ha = ha + 24.0;
-    ha = ha * 15.0;
-    
-    float DEC, HA, LAT, x_hor, y_hor, z_hor;
-    //convert to radians
-    DEC = dec * D2R;
-    HA = ha * D2R;
-    LAT = telescope_lat * D2R;
-    
-    //Horizontal coordinates
-    x_hor = cos(HA) * cos(DEC) * sin(LAT) -  sin(DEC) * cos(LAT);
-    y_hor =sin(HA) * cos(DEC);
-    z_hor = cos(HA) * cos(DEC) * cos(LAT) + sin(DEC) * sin (LAT);
-    float r_az = atan2f(y_hor, x_hor) * R2D + 180.;
-    float r_alt = asinf(z_hor) * R2D;
-    
-    *az = r_az;
-    *alt = r_alt;
-    if (*az >= 360) *az -= 360;
-    
-}
-    
-
-
-double Jd0(int year, int month, int day)
-//Date to Julian days
+//=========================================================================================
+//   
+//=========================================================================================
+double Julian_Day(int year, int month, int day)
+/**
+ * Func: Compute the Julian day (JD), given Year, Month and Day
+ *
+ **Param year:      Year
+ **Param month:     Month
+ **Param day:       Day
+ **
+ **Return Julian Day: JD
+**/
 {
     double JD;
     double AA,BB;
@@ -76,59 +43,49 @@ double Jd0(int year, int month, int day)
     }
     AA = (double)((int)(year/100.0));
     BB = 2 - AA + (double)((int)(AA/4.0));
-    
     JD = BB + (double) ((int)(365.25 * year)) +
         (double)((int)(30.6001 * (month + 1))) + day + 1720994.5;
-    
     return JD;
     
 }
 
 
-double jd2(struct timespec time_now){
-    //Date to Jd
-    //Take in timespec
-    
-    struct tm* timeinfo;
-    timeinfo = localtime(&time_now.tv_sec);
-    unsigned int year = timeinfo->tm_year + 1900;
-    unsigned int month = timeinfo->tm_mon + 1;
-    unsigned int day = timeinfo->tm_mday;
-    
-    return Jd0(year, month, day);
-    
-}
 
-float get_lst(struct timespec time_now, float tel_long){
+//=========================================================================================
+//     Calculate LST from local time and telescope longitude-LST in hours
+//=========================================================================================
+double LST(struct timespec current_time, double longitude){
+  
+    /*----------- get time information-------------------*/
+    clock_gettime(CLOCK_REALTIME, &current_time);
+    struct tm *timeinfo = localtime(&current_time.tv_sec);
+    unsigned int hours, minutes, seconds, day, month, year;
+    year = timeinfo->tm_year + 1900;
+    month = timeinfo->tm_mon + 1;
+    day = timeinfo->tm_mday;
+    hours =  timeinfo->tm_hour;
+    minutes =  timeinfo->tm_min;
+    seconds = timeinfo->tm_sec;
+    double time_nsec = current_time.tv_nsec/1e9;
     
-    //Convert local time to Local Sidereal time for a given
-    //Observation longitude
-    /**
-     ** Inputs:
-     **         struct time_now
-     **         tel_long             Observation Longitude [degrees]
-     **
-     ** Return:
-     **         LST                   Local sidereal time  [degrees]
-     **/
-    struct tm* timeinfo;
-    timeinfo = localtime(&time_now.tv_sec);
-    unsigned int year = timeinfo->tm_year + 1900;
-    unsigned int month = timeinfo->tm_mon + 1;
-    unsigned int day = timeinfo->tm_mday;
+    printf("Time is %02d:%02d:%lf \n", hours, minutes, seconds+ time_nsec);
+    /*------------------------------------------------*/
     
-    double jd = Jd0(year, month, day);
+    double JD = Julian_Day(year, month, day);
     
-    double T = (jd - 2451545.0)/36525.0;
+    printf("Julian day is %lf \n", JD);
+    double T = (JD - 2451545.0)/36525.0;
+    //gmst in hours
+    double gmst =  (24110.54841 + (8640184.812866*T) + (0.093104*T*T - 0.0000063*T*T*T))/SEC2HR;
+    gmst = fmod(gmst, 24.);
+    //get current time in hours
+    double UT = hours + (minutes/60.) + (seconds + time_nsec)/SEC2HR;
+    double GSMT = fmod((gmst + UT * 1.002737909), 24.);
+    //get the local sidereal time
+    double lon = longitude/Deg2HR
+    printf("Longitude is %lf \n", lon);
     
-    // Works if time after year 2000, otherwise T is -ve and might break
-    double T0 = fmod((6.697374558 + (2400.051336 * T) + (0.000025862 * T * T)), 24.);
-    
-    double UT = (timeinfo->tm_hour) + (timeinfo->tm_min / 60.)
-    + (timeinfo->tm_sec + time_now.tv_nsec / 1.e9) / 3600.;
-    
-    double GST = fmod((T0 + UT * 1.002737909), 24.);
-    double LST = GST + tel_long / 15.;
+    double LST = GSMT + longitude/Deg2HR;
     while (LST < 0) {
         LST = LST + 24;
     }
@@ -138,6 +95,44 @@ float get_lst(struct timespec time_now, float tel_long){
     
 }
 
+//=========================================================================================
+//          Convert RA and DEC to Azimuth and Elevation
+//=========================================================================================
+
+void RaDec2Altaz( double RA, double Dec, double *Az, double *Alt, double LST, double lat){
+    
+    double rha, rdec, ralt, raz, rlat;
+    
+    double HA = LST - RA;
+    if (HA > 12.0)
+        HA -= 24.0;
+    else if (HA < -12.0)
+        HA *=15.0;
+    
+    double sineLat, cosLat, sineDec, cosDec;
+    double sineHA, cosHA, sineAlt, cosAlt;
+    //convert angels to radians
+    rha = HA * Deg2Rad;
+    rlat = lat * Deg2Rad;
+    rdec = Dec * Deg2Rad;
+    
+    sineLat = sin(rlat); cosLat = cos(rlat);
+    sineDec = sin(rdec); cosDec =cos(rdec);
+    sineHA = sin(rha);   cosHA = cos(rha);
+    
+    double xhor = cosHA * cosDec * sineLat - sineDec * cosLat;
+    double yhor = sineHA * cosDec;
+    double zhor = cosHA * cosDec * cosLat + sineDec * sineLat;
+    
+    //get az/alt in degrees
+    raz = atan2f(yhor, xhor);
+    *Az =  raz * Rad2Deg + 180.0;
+    if (*Az >= 360) *Az -= 360;
+    ralt = asinf(zhor);
+    *Alt = ralt * Rad2Deg;
+    
+    
+}
 
 
 
