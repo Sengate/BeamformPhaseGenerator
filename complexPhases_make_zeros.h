@@ -14,9 +14,6 @@ typedef struct complex_phases{
     
 }complex_phases;
 
-
-
-
 //make zeros of complex phases
 //Dimensions [nChan, nBeams, nAntenna]
 complex_phases * ComplexPhases_make_zeros(const unsigned int nChan, const unsigned int nBeam,
@@ -42,9 +39,6 @@ complex_phases * ComplexPhases_make_zeros(const unsigned int nChan, const unsign
     
 }
 
-
-
-
 //Destroy complex phases
 void complexPhase_destroy(complex_phases *phases) {
     
@@ -53,9 +47,6 @@ void complexPhase_destroy(complex_phases *phases) {
     free((void *) phases);
 }
     
-
-
-
 //Print phases
 void complex_phases_print(const complex_phases *phases){
     
