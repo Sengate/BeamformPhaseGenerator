@@ -1,7 +1,7 @@
 # BeamformPhaseGenerator
 
 
-## Phase generation function
+## Phase generation Code
 
 
 struct  : `Parameters *param` read files containing the following;
