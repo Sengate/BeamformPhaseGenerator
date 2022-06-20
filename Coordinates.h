@@ -49,8 +49,6 @@ double Julian_Day(int year, int month, int day)
     
 }
 
-
-
 //=========================================================================================
 //     Calculate LST from local time and telescope longitude-LST in hours
 //=========================================================================================
@@ -99,7 +97,7 @@ double LST(struct timespec current_time, double longitude){
 //          Convert RA and DEC to Azimuth and Elevation
 //=========================================================================================
 
-void RaDec2Altaz( double RA, double Dec, double *Az, double *Alt, double LST, double lat){
+void RaDec2Altaz( double RA, double Dec, double LST, double lat, double *Az, double *Alt){
     
     double rha, rdec, ralt, raz, rlat;
     
