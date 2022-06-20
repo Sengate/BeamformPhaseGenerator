@@ -5,8 +5,8 @@
 
 
 struct  : `Parameters *param` read files containing the following;
-Beam pointings in degrees (floats): `pointings[num_beams][Ra, Dec]`
-Dish locations in meters (floats): `dish_locations[num_ants][X,Y,Z]`
+Beam pointings in degrees (floats): `pointings[num_beams][Ra, Dec]`,
+Dish locations in meters (floats): `dish_locations[num_ants][X,Y,Z]`,
 List of frequency centers in MHz (float): `frequency_map[num_frequencies]`
 
 Struct `timespec`:
