@@ -28,7 +28,7 @@ Convert the beams equatorial coordinates to horizontal coordinate
 
 Function <<calculate_GeometricDelays>>:
 Calculate the geometrical delays for each freq, beam and antenna:
-`Output-geometrical_delays[num_frequencies, num_beams, num_dishes]
+`Output-geometrical_delays[num_frequencies, num_beams, num_dishes]`
 
 Function <<calculate_ComplexPhases>>;
  calculate complex phases 
