@@ -21,7 +21,7 @@ Outpust:
   
 From phase_generator.c
 
-Function <<<LST>>:
+Function <<lst>>:
 Compute the LST given time now an the telescope longitude
 Function <<RaDec2Altaz>>:
 Convert the beams equatorial coordinates to horizontal coordinate
