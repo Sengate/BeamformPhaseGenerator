@@ -1,8 +1,7 @@
 /*##########################################################################
- * Phase Generator Code
+ *
  *###########################################################################
  */
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,13 +15,16 @@
 
 #define SEC2HR 1/3600.0;
 #define Deg2HR 1/15.0;
+#ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
+#endif
+
 #define Deg2Rad M_PI/180.0
 #define Rad2Deg 180.0/M_PI
 #define C_SPEED 299792458.0
 
 /*-----------HIRAX PARAMETERS------------*/
-//Using HARTRAO location just for test
+//Using HARTRAO location
 #define HIRAX_LONGITUDE 27.6853931
 #define HIRAX_LATITUDE  -25.8897515
 #define num_CHANNELS 10
@@ -32,10 +34,8 @@
 //=========================================================================================
 //                             READ  THE INPUT FILES
 //=========================================================================================
-//Read both antenna position and beams coordinates files
-//Polute parameters structure
-
 Parameters *read_input_files(const char *ants_file, const char *beams_file){
+    
     //Memory allocation
     struct Parameters *param;
     param = Parameters_make_zeros(num_CHANNELS, num_BEAMS, num_ANTENNAS);
@@ -57,6 +57,7 @@ Parameters *read_input_files(const char *ants_file, const char *beams_file){
         param->EW_antennas[count] = x;
         param->NS_antennas[count] = y;
         param->H_antennas[count] = z;
+        
         count++;
     }
     //printf("%f", param->EW_antennas);
@@ -98,6 +99,7 @@ Parameters *read_input_files(const char *ants_file, const char *beams_file){
         param->frequencies[i] = (MIN_FREQ + i*chn_res) * 10e6;}
     
     return param;
+    Parameters_destroy(param);
 }
 
 //======================================================================================
@@ -249,16 +251,15 @@ float *calculate_GeometricDelays(const Parameters *param, struct telescope *loca
     free(altitudes);
     fphase_destroy(phase_mat);
 }
-
 /*=======================================================================================
-*                     Make Complex phases
+*Make Complex phases
 *========================================================================================
  */
 complex_phases *calculate_ComplexPhases(float *float_delays){
     complex_phases *phases;
-    phases =(complex_phases *) malloc (sizeof(complex_phases));
-    phases->real =  float_phases(num_CHANNELS, num_BEAMS, num_ANTENNAS);
-    phases->imag =  float_phases(num_CHANNELS, num_BEAMS, num_ANTENNAS);
+    phases =ComplexPhases_make_zeros(num_CHANNELS,num_BEAMS,num_ANTENNAS);
+    //phases->real =  float_phases(num_CHANNELS, num_BEAMS, num_ANTENNAS);
+    //phases->imag =  float_phases(num_CHANNELS, num_BEAMS, num_ANTENNAS);
     int ichan,jbeam,kant;
     for (ichan =0; ichan<num_CHANNELS; ichan++){
         for (jbeam =0; jbeam<num_BEAMS; jbeam++){
@@ -273,13 +274,12 @@ complex_phases *calculate_ComplexPhases(float *float_delays){
     complexPhase_destroy(phases);
 }
 
-
 int main(){
     
     //Get the LST
     double lst;
     struct timespec tv;
-    lst  = LST(tv, lon);
+    //lst  = LST(tv, lon);
     
     //telescope
     struct telescope HIRAX = {HIRAX_LONGITUDE, HIRAX_LATITUDE};
@@ -297,13 +297,14 @@ int main(){
     
     //Calculate float phases
     float *fPHASES = float_phases(num_CHANNELS, num_BEAMS,num_ANTENNAS);
+    
     fPHASES = calculate_GeometricDelays(pp,TEL,tv);
     
     //Calculate complex phases
     struct complex_phases *comPhases;
     comPhases = calculate_ComplexPhases(fPHASES);
     
-    int ichan, jbeam, kant;
+    /*int ichan, jbeam, kant;
     for (ichan =0; ichan<num_CHANNELS; ichan++){
         for (jbeam =0; jbeam<num_BEAMS; jbeam++){
             for (kant =0; kant<num_ANTENNAS; kant++){
@@ -313,7 +314,7 @@ int main(){
                 
                 printf("(%+1.5f + %1.5fj) ",comPhases->real[out_idx],comPhases->imag[out_idx]);
                 
-            }}}
+            }}}*/
     
     return 0;
 }
