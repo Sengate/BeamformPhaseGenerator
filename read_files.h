@@ -67,7 +67,6 @@ Parameters *read_input_files(const char *ants_file, const char *beams_file){
         printf(" Number of beams in file %d does not match number of expected beams %d \n", count1, NUM_BEAMS);
     }
     
-    
     param->nfreq = NUM_FREQ;
     float MAX_FREQ = 810.0;
     float MIN_FREQ = 400.0;
@@ -81,10 +80,6 @@ Parameters *read_input_files(const char *ants_file, const char *beams_file){
 }
 
 
-
-
-
-
 void read_antenna_positions(const char *file_name, const Parameters *param){
     
     FILE *ants_file; //= fopen(ants_positions,"r");
@@ -94,7 +89,6 @@ void read_antenna_positions(const char *file_name, const Parameters *param){
         exit(EXIT_FAILURE);
     }
     float x,y,z;
-    
     int count =0;
     while ( ( fscanf(ants_file, "%f %f %f", &x, &y, &z) ) == 3)
     {
@@ -123,9 +117,7 @@ void read_beam_directions(const char *file_name, const Parameters *param){
         exit(EXIT_FAILURE);
     }
     float RAs, DECs;
-    
     int count=0;
-    
     while ( ( fscanf(beams_dir, "%f %f", &RAs, &DECs) ) == 2)
     {
         param->RAs[count] = RAs;

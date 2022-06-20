@@ -8,8 +8,8 @@
 typedef struct Parameters{
     
     //get frequencies
-    float *frequencies;
-    unsigned int nfreq;
+    //float *frequencies;
+    //unsigned int nfreq;
     
     //get antennas info
     float *EW_antennas;
@@ -25,20 +25,20 @@ typedef struct Parameters{
 }Parameters;
 
 
-Parameters *Parameters_make_zeros(unsigned int nBeams, unsigned int nAnts, unsigned int nChan){
+Parameters *Parameters_make_zeros(unsigned int nBeams, unsigned int nAnts){
     
     Parameters *param;
     param = (Parameters *)malloc(sizeof(Parameters));
     
-    param->nfreq = nChan;
+    //param->nfreq = nChan;
     param->nants = nAnts;
     param->nbeams = nBeams;
     
     
     
     //Allocate frequencies
-    param->frequencies = (float*) malloc (sizeof(float) * nChan);
-    memset(param->frequencies, 0x00, sizeof(float) * nChan);
+    //param->frequencies = (float*) malloc (sizeof(float) * nChan);
+    //memset(param->frequencies, 0x00, sizeof(float) * nChan);
     
     
     //Allocate Antennas Positions
@@ -62,11 +62,9 @@ Parameters *Parameters_make_zeros(unsigned int nBeams, unsigned int nAnts, unsig
     
 }
 
-
-
 //Destroy Inputs memory allocation
 void Parameters_destroy( Parameters *param){
-    free((void *) param->frequencies);
+   // free((void *) param->frequencies);
     free((void *) param->RAs);
     free((void *) param->DECs);
     free((void *) param->EW_antennas);
