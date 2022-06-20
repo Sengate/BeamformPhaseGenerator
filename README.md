@@ -21,18 +21,16 @@ Outpust:
   
 From phase_generator.c
 
-Function: `LST`:
-Compute the LST given time now an the telescope longitude
-Function: `RaDec2Altaz`:
-Convert the beams equatorial coordinates to horizontal coordinate
+Function: `LST`: Compute the LST given time now an the telescope longitude
 
-Function: `calculate_GeometricDelays`:
-Calculate the geometrical delays for each freq, beam and antenna:
-`Output-geometrical_delays[num_frequencies, num_beams, num_dishes]`
 
-Function <<calculate_ComplexPhases>>;
- calculate complex phases 
-`Output-Complex_phases[num_frequencies, num_beams, num_dishes]`
+Function: `RaDec2Altaz`: Convert the beams equatorial coordinates to horizontal coordinate
+
+Function: `calculate_GeometricDelays`: Calculate the geometrical delays for each freq, beam and antenna:
+Output: `geometrical_delays[num_frequencies, num_beams, num_dishes]`
+
+Function `alculate_ComplexPhases`: calculate complex phases 
+Output: `Complex_phases[num_frequencies, num_beams, num_dishes]`
 
 
 
