@@ -1,16 +1,9 @@
 /*##########################################################################
- *
+ * Phase Generator Code
  *###########################################################################
  */
 
-/**
- *
- *
- *
- *
- *
- *
- */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -29,7 +22,7 @@
 #define C_SPEED 299792458.0
 
 /*-----------HIRAX PARAMETERS------------*/
-//Using HARTRAO location
+//Using HARTRAO location just for test
 #define HIRAX_LONGITUDE 27.6853931
 #define HIRAX_LATITUDE  -25.8897515
 #define num_CHANNELS 10
@@ -39,8 +32,10 @@
 //=========================================================================================
 //                             READ  THE INPUT FILES
 //=========================================================================================
+//Read both antenna position and beams coordinates files
+//Polute parameters structure
+
 Parameters *read_input_files(const char *ants_file, const char *beams_file){
-    
     //Memory allocation
     struct Parameters *param;
     param = Parameters_make_zeros(num_CHANNELS, num_BEAMS, num_ANTENNAS);
@@ -62,7 +57,6 @@ Parameters *read_input_files(const char *ants_file, const char *beams_file){
         param->EW_antennas[count] = x;
         param->NS_antennas[count] = y;
         param->H_antennas[count] = z;
-        
         count++;
     }
     //printf("%f", param->EW_antennas);
@@ -256,9 +250,8 @@ float *calculate_GeometricDelays(const Parameters *param, struct telescope *loca
     fphase_destroy(phase_mat);
 }
 
-
 /*=======================================================================================
-*Make Complex phases
+*                     Make Complex phases
 *========================================================================================
  */
 complex_phases *calculate_ComplexPhases(float *float_delays){
