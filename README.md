@@ -36,7 +36,7 @@ Output: `Complex_phases[num_frequencies, num_beams, num_dishes]`
 
 ## Quantization function (To be included):
 
-Inputs- complex phases, nbits
+Inputs- complex float phases, nbits
 ```
 Quantization_steps = (2 * PI)/2^bits
 Quantized_phase =  Quantization_steps * round(phase/Quantization_steps)
