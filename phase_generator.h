@@ -2,7 +2,6 @@
 //#include <stdlib.h>
 //#include <string.h>
 
-
 struct telescope{
     float longitude;
     float latitude;
@@ -24,13 +23,10 @@ typedef struct Parameters{
     //get beams info
     float *RAs;
     float *DECs;
-    unsigned int num_beams;
-    
+    unsigned int num_beams;   
 }Parameters;
 
-
 Parameters *Parameters_make_zeros(unsigned int num_Channels, unsigned int num_Beams, unsigned int num_Ants){
-    
     Parameters *param;
     param = (Parameters *)malloc(sizeof(Parameters));
     
@@ -61,9 +57,9 @@ Parameters *Parameters_make_zeros(unsigned int num_Channels, unsigned int num_Be
     
     return param;
     
-    free(param);
-    
+    free(param);   
 }
+
 //Destroy Inputs memory allocation
 void Parameters_destroy( Parameters *param){
     free((void *) param->frequencies);
@@ -76,9 +72,6 @@ void Parameters_destroy( Parameters *param){
     
 }
 /*-----------------------------------------------------------------------------------------*/
-
-
-
 /*-----------------------------------------------------------------------------------------*/
 
 //complex phases struct
@@ -87,13 +80,9 @@ typedef struct complex_phases{
 //unsigned int nChan;
     //unsigned int nBeam;
     //unsigned int nAnt;
-    
     float *real;
     float *imag;
-    
-}complex_phases;
-
-
+    }complex_phases;
 
 //make zeros of complex phases
 //Dimensions [nChan, nBeams, nAntenna]
@@ -115,10 +104,7 @@ complex_phases * ComplexPhases_make_zeros(const unsigned int nChan, const unsign
     
     memset(phases->real, 0x00, sizeof(float) * dimesion);
     memset(phases->imag, 0x00, sizeof(float) * dimesion);
-    
-    return phases;
-    
-}
+    return phases;}
 
 void complexPhase_destroy(complex_phases *phases) {
     free((void *) phases->real);
