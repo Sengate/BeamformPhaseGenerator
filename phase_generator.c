@@ -31,6 +31,28 @@
 #define num_BEAMS 3
 #define num_ANTENNAS 256
 
+
+
+
+void _8bit_quantiser( float* fphases, int data_size, char *quat_phases){
+    int i, j;
+    float num_levels = (float)(powf(2.0, 8)-1.0);
+    
+    float fmax = fphases[0];
+    float fmin = fphases[0];
+    for(i=1; i<data_size; i++)
+       {if(fmin>fphases[i])
+        fmin=fphases[i];
+        if(fmax<fphases[i])
+            fmax=fphases[i];}
+    float step_size = (fmax-fmin)/num_levels;
+    
+    for (j=0; j<data_size; j++){
+        quat_phases[i] = roundf(fphases[i]/step_size);
+        
+    }
+}
+
 //=========================================================================================
 //                             READ  THE INPUT FILES
 //=========================================================================================
@@ -150,23 +172,28 @@ double LST(struct timespec current_time, double longitude){
     
     //printf("Current Time is %02d:%02d:%lf \n", hours, minutes, seconds+ time_nsec);
     /*------------------------------------------------*/
-    double JD = Julian_Day(year, month, day);
-    //printf("Julian day is %lf \n", JD);
+    float JD = Julian_Day(year, month, day);
+    
+   // printf("Julian day is %lf \n", JD);
+    
     double T = (JD - 2451545.0)/36525.0;
     //gmst in hours
-    double gmst =  (24110.54841 + (8640184.812866*T) + (0.093104*T*T - 0.0000063*T*T*T))/SEC2HR;
+    double gmst =  (24110.54841 + (8640184.812866*T) + (0.093104*T*T - 0.0000063*T*T*T))*SEC2HR;
     gmst = fmod(gmst, 24.);
     //get current time in hours
-    double UT = hours + (minutes/60.) + (seconds + time_nsec)/SEC2HR;
+    double UT = hours + (minutes/60.) + (seconds + time_nsec)*SEC2HR;
     double GSMT = fmod((gmst + UT * 1.002737909), 24.);
     //get the local sidereal time
-    double lon = longitude/Deg2HR
-    //printf("Longitude is %lf \n", lon);
-    double LST = GSMT + longitude/Deg2HR;
+    double lon = longitude*Deg2HR
+    //printf("Longitude is %lf \n", longitude);
+    double LST = GSMT + longitude*Deg2HR;
     while (LST < 0) {
         LST = LST + 24;
     }
     LST = fmod(LST, 24);
+    
+    printf("LST =: %f \n", LST);
+    
     return LST;
 }
 
@@ -207,9 +234,8 @@ void RaDec2Altaz( double RA, double Dec, double LST, double lat, double *Az, dou
 }
 
 /*=========================================================================================
- * Calculate float phase delays
+ * Calculate float geometric delays between antennas
  *=========================================================================================
- *This function calculates phase delays for all frequencies and beam pointings
  *------------------
  *Parameters in
  *-----------------
@@ -220,7 +246,61 @@ void RaDec2Altaz( double RA, double Dec, double LST, double lat, double *Az, dou
  * Ouput
  *----------------------
  */
-float *calculate_GeometricDelays(const Parameters *param, struct telescope *location, struct timespec time_now){
+complex_char *calculate_quantised_phases(const Parameters *param, struct telescope *location, struct timespec time_now){
+
+    int ichan, jbeam, kant;
+    double az, el;
+    double *azimuths = (double*)malloc(sizeof(double) * param->num_beams);
+    double *elevations = (double*)malloc(sizeof(double) * param->num_beams);
+    //get the LST
+    double lst = LST(time_now, location->longitude);
+    
+    complex_char *out_phases;
+    out_phases = char_make_zeros(param->num_freq,param->num_beams,param->num_ants);
+
+    //generate phase matrix
+    //float *phase_mat = float_phases(param->num_freq, param->num_beams, param->num_ants);
+    for (ichan=0; ichan < param->num_freq; ichan++){
+        float constant = 2*M_PI * param->frequencies[ichan]/C_SPEED;
+        for (jbeam=0; jbeam < param->num_beams; jbeam++){
+            
+            //get the beams azimuths and altitudes given the LST, location latitude and ....beam pointings
+            RaDec2Altaz(param->RAs[jbeam], param->DECs[jbeam], lst, location->latitude, &azimuths[jbeam], &elevations[jbeam]);
+            az = azimuths[jbeam];
+            el = elevations[jbeam];
+            
+            for (kant =0; kant <  param->num_ants; kant++){
+                //EW_antennas, NS_antennas: antennas locations in the East and North directions
+                float EW_projection = param->EW_antennas[kant] * cos(el) * sin(az);
+                float NS_projection =  param->NS_antennas[kant] * cos(el) * cos(az);
+                
+                const int out_index = phase_index(ichan,jbeam,kant,param->num_beams,param->num_ants);
+                float geometric_delay = constant * ( EW_projection + NS_projection);
+                float real_phases = cos(geometric_delay);
+                float imag_phases = -sin(geometric_delay);
+                
+                //Quantise the phases
+                _8bit_quantiser(&real_phases, out_index, out_phases->real);
+                _8bit_quantiser(&imag_phases, out_index, out_phases->imag);
+            }
+        }
+    }
+    
+    return out_phases;
+    free(azimuths);
+    free(elevations);
+    
+    char_phase_destroy(out_phases);
+    //fphase_destroy(phase_mat);
+}
+
+
+/*
+*=======================================================================================
+*Make Complex phases
+*========================================================================================
+*/
+/*complex_phases *calculate_ComplexPhases(const Parameters *param, struct telescope *location, struct timespec time_now){
     
     int ichan, jbeam, kant;
     double az, alt;
@@ -228,81 +308,75 @@ float *calculate_GeometricDelays(const Parameters *param, struct telescope *loca
     double *altitudes = (double*)malloc(sizeof(double) * param->num_beams);
     //get the LST
     double lst = LST(time_now, location->longitude);
-    //generate phase matrix
-    float *phase_mat = float_phases(param->num_freq, param->num_beams, param->num_ants);
+    
+    complex_phases *fphases;
+    phases = ComplexPhases_make_zeros(num_CHANNELS,num_BEAMS,num_ANTENNAS);
+    
+    //float *phase_mat = float_phases(param->num_freq, param->num_beams, param->num_ants);
     for (ichan=0; ichan < param->num_freq; ichan++){
         float constant = 2*M_PI * param->frequencies[ichan]/C_SPEED;
         for (jbeam=0; jbeam < param->num_beams; jbeam++){
+            
             //get the beams azimuths and altitudes given the LST, location latitude and ....beam pointings
             RaDec2Altaz(param->RAs[jbeam], param->DECs[jbeam], lst, location->latitude, &azimuths[jbeam], &altitudes[jbeam]);
             az = azimuths[jbeam];
             alt = altitudes[jbeam];
+            
             for (kant =0; kant <  param->num_ants; kant++){
-                //EW_antennas, NS_antennas: antennas locations in the East and North directions
-                float EW_projection = param->EW_antennas[kant] * sin(alt) * cos(az);
+        
+                float EW_projection = param->EW_antennas[kant] * cos(alt) * cos(az);
                 float NS_projection =  param->NS_antennas[kant] * sin(alt) * cos(az);
+                
                 const int out_index = phase_index(ichan,jbeam,kant,param->num_beams,param->num_ants);
-                phase_mat[out_index] = constant * ( EW_projection + NS_projection);
-            }
-        }
-    }
-    return phase_mat;
-    free(azimuths);
-    free(altitudes);
-    fphase_destroy(phase_mat);
-}
-/*=======================================================================================
-*Make Complex phases
-*========================================================================================
- */
-complex_phases *calculate_ComplexPhases(float *float_delays){
-    complex_phases *phases;
-    phases =ComplexPhases_make_zeros(num_CHANNELS,num_BEAMS,num_ANTENNAS);
-    //phases->real =  float_phases(num_CHANNELS, num_BEAMS, num_ANTENNAS);
-    //phases->imag =  float_phases(num_CHANNELS, num_BEAMS, num_ANTENNAS);
-    int ichan,jbeam,kant;
-    for (ichan =0; ichan<num_CHANNELS; ichan++){
-        for (jbeam =0; jbeam<num_BEAMS; jbeam++){
-            for (kant =0; kant<num_ANTENNAS; kant++){
-                const int out_idx = phase_index(ichan,jbeam,kant,num_BEAMS, num_ANTENNAS);
-                phases->real[out_idx] = cos(float_delays[out_idx]);
-                phases->imag[out_idx] = -sin(float_delays[out_idx]);
-            }
-        }
-    }
-    return phases;
-    complexPhase_destroy(phases);
-}
+                float geometric_delay = constant * ( EW_projection + NS_projection);
+
+                fphases->real[out_index] = cos(geometric_delay[out_index]);
+                fphases->imag[out_index] = -sin(geometric_delay[out_index]);
+                
+    return fphases;
+    complexPhase_destroy(fphases);
+}*/
 
 int main(){
-    
+    float lon = 20.5;
     //Get the LST
     double lst;
     struct timespec tv;
-    //lst  = LST(tv, lon);
+    
+    
+    timespec_get(&tv, TIME_UTC);
+    char buff[100];
+    //strftime(buff, sizeof buff, "%D %T", gmtime(&tv.tv_sec));
+    //printf("Current time: %s.%09ld UTC\n", buff, tv.tv_nsec);
+    //printf("Raw timespec.time_t: %jd\n", (intmax_t)tv.tv_sec);
+    //printf("Raw timespec.tv_nsec: %09ld\n", tv.tv_nsec);
+    
+    lst  = LST(tv, lon);
+    
+    printf("%f \n", lst);
     
     //telescope
-    struct telescope HIRAX = {HIRAX_LONGITUDE, HIRAX_LATITUDE};
-    struct telescope *TEL;
-    TEL = &HIRAX;
+    //struct telescope HIRAX = {HIRAX_LONGITUDE, HIRAX_LATITUDE};
+    //struct telescope *TEL;
+    //TEL = &HIRAX;
     
     
     //Polute parameters structure
     //Frequencies, antenna Positions and Beams cordinates
-    struct Parameters *pp;
-    pp = read_input_files("HIRAX_Antenna_Positions.txt", "Beams.txt");
+    //struct Parameters *pp;
+    //pp = read_input_files("HIRAX_Antenna_Positions.txt", "Beams.txt");
     
     //for (int i=0; i<num_BEAMS; i++){
       // printf("%f \n", pp->frequencies[i]);}
     
     //Calculate float phases
-    float *fPHASES = float_phases(num_CHANNELS, num_BEAMS,num_ANTENNAS);
+    //float *fPHASES = float_phases(num_CHANNELS, num_BEAMS,num_ANTENNAS);
     
-    fPHASES = calculate_GeometricDelays(pp,TEL,tv);
+        //fPHASES = calculate_GeometricDelays(pp,TEL,tv);
     
     //Calculate complex phases
-    struct complex_phases *comPhases;
-    comPhases = calculate_ComplexPhases(fPHASES);
+   // struct complex_phases *comPhases;
+    //comPhases = calculate_ComplexPhases(fPHASES);
     
     /*int ichan, jbeam, kant;
     for (ichan =0; ichan<num_CHANNELS; ichan++){

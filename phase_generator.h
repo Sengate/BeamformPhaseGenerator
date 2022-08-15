@@ -95,6 +95,12 @@ typedef struct complex_phases{
 
 
 
+typedef struct complex_char{
+    char *real;
+    char *imag;
+}complex_char;
+
+
 //make zeros of complex phases
 //Dimensions [nChan, nBeams, nAntenna]
 complex_phases * ComplexPhases_make_zeros(const unsigned int nChan, const unsigned int nBeam,
@@ -103,19 +109,12 @@ complex_phases * ComplexPhases_make_zeros(const unsigned int nChan, const unsign
     complex_phases *phases;
 
     phases =(complex_phases *) malloc (sizeof(complex_phases));
-    
-    //phases->nChan = nChan;
-    //phases->nBeam = nBeam;
-    //phases->nAnt = nAnt;
-    
+
     unsigned int dimesion = nChan * nBeam * nAnt;
-    
     phases->real = (float *)malloc(sizeof(float) * dimesion);
     phases->imag = (float *)malloc(sizeof(float) * dimesion);
-    
     memset(phases->real, 0x00, sizeof(float) * dimesion);
     memset(phases->imag, 0x00, sizeof(float) * dimesion);
-    
     return phases;
     
 }
@@ -134,7 +133,6 @@ void complexPhase_destroy(complex_phases *phases) {
 float *float_phases(const unsigned int NCHAN, const unsigned int NBEAMS,
                     const unsigned int NANTS){
     unsigned int dimesion = NCHAN * NBEAMS * NANTS;
-    
     float *phase_mat = (float *)malloc(sizeof(float) * dimesion);
     memset(phase_mat, 0x00, sizeof(float) * dimesion);
     return phase_mat;
@@ -145,7 +143,25 @@ void fphase_destroy(float *float_phases) {
 }
 
 /*-----------------------------------------------------------------------------------------*/
+complex_char * char_make_zeros(const unsigned int nChan, const unsigned int nBeam,
+                                    const unsigned int nAnt)
+{
+    complex_char *phases;
+    phases =(complex_char *) malloc (sizeof(complex_char));
+    unsigned int dimesion = nChan * nBeam * nAnt;
+    phases->real = (char *)malloc(sizeof(char) * dimesion);
+    phases->imag = (char *)malloc(sizeof(char) * dimesion);
+    memset(phases->real, 0x00, sizeof(char) * dimesion);
+    memset(phases->imag, 0x00, sizeof(char) * dimesion);
+    return phases;
+}
 
+
+void char_phase_destroy(complex_char *phases) {
+    free((void *) phases->real);
+    free((void *) phases->imag);
+    free((void *) phases);
+}
 
 
 /*==========================================================================================*/
